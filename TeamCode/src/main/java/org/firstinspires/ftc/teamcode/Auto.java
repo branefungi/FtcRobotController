@@ -12,13 +12,11 @@ public class Auto extends LinearOpMode{
     @Override
     public void runOpMode() {
 
-        // create a timer
-        ElapsedTime myTimer = new ElapsedTime();
+        // set up the motors here
 
         waitForStart();
 
-        // pause the program, every 1000 is a 1 second pause
-        sleep(1000);
+        // write the actions here
         
         
 
