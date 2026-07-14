@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 @Disabled
-public class Reference extends LinearOpMode{
+public class ReferenceTeleop extends LinearOpMode{
 
     @Override
     public void runOpMode() {
