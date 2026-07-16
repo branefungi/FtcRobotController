@@ -36,12 +36,12 @@ public class Auto extends LinearOpMode {
 
 
 
-    private void forward(){
+    private void forward(double distance){
         frontLeft.setPower(0.6);
         frontRight.setPower(0.6);
         backLeft.setPower(0.6);
         backRight.setPower(0.6);
-        sleep(1000);
+        sleep(distance * 1000);
 
         frontLeft.setPower(0);
         frontRight.setPower(0);
@@ -49,13 +49,13 @@ public class Auto extends LinearOpMode {
         backRight.setPower(0);
     }
 
-    private void backward(){
+    private void backward(double distance){
         frontLeft.setPower(-0.6);
         frontRight.setPower(-0.6);
         backLeft.setPower(-0.6);
         backRight.setPower(-0.6);
 
-        sleep(1000);
+        sleep(distance * 1000);
 
         frontLeft.setPower(0);
         frontRight.setPower(0);
@@ -63,13 +63,13 @@ public class Auto extends LinearOpMode {
         backRight.setPower(0);
     }
 
-    private void left(){
+    private void left(double distance){
         frontLeft.setPower(0.6);
         frontRight.setPower(0.6);
         backLeft.setPower(0.6);
         backRight.setPower(0.6);
 
-        sleep(1300);
+        sleep(distance * 1300);
 
         frontLeft.setPower(0);
         frontRight.setPower(0);
@@ -77,13 +77,13 @@ public class Auto extends LinearOpMode {
         backRight.setPower(0);
     }
 
-    private void right(){
+    private void right(double distance){
         frontLeft.setPower(0.6);
         frontRight.setPower(0.6);
         backLeft.setPower(0.6);
         backRight.setPower(0.6);
 
-        sleep(1300);
+        sleep(distance * 1300);
 
         frontLeft.setPower(0);
         frontRight.setPower(0);
