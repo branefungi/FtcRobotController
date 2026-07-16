@@ -30,7 +30,7 @@ public class Auto extends LinearOpMode {
         waitForStart();
         
         // Write the movements under this comment
-        forward();
+        forward(1);
         
     }
 
