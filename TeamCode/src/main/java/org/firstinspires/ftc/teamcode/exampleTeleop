@@ -1,0 +1,61 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+@TeleOp(name = "Mecanum Drive")
+public class MecanumDrive extends LinearOpMode {
+
+    @Override
+    public void runOpMode() {
+
+        // Set up the four motors (same as the slides: FL, FR, BL, BR)
+        DcMotor frontLeft = hardwareMap.get(DcMotor.class, "FL");
+        DcMotor frontRight = hardwareMap.get(DcMotor.class, "FR");
+        DcMotor backLeft = hardwareMap.get(DcMotor.class, "BL");
+        DcMotor backRight = hardwareMap.get(DcMotor.class, "BR");
+
+        // Reverse the right side so both sides drive forward together
+        frontRight.setDirection(DcMotor.Direction.REVERSE);
+        backRight.setDirection(DcMotor.Direction.REVERSE);
+
+        // Wait for the driver to press start on the Driver Station
+        waitForStart();
+
+        // Everything after waitForStart() runs during the match
+        while (opModeIsActive()) {
+
+            // Read the joystick values
+            // left_stick_y is -1.0 (up) to 1.0 (down), so flip it to make up positive
+            double drive = -gamepad1.left_stick_y;   // forward and backward
+            double strafe = -gamepad1.left_stick_x;   // left and right
+            double turn = -gamepad1.right_stick_x;    // turning
+
+            // Mix the three movements together for each wheel
+            double frontLeftPower = drive + strafe + turn;
+            double frontRightPower = drive - strafe - turn;
+            double backLeftPower = drive - strafe + turn;
+            double backRightPower = drive + strafe - turn;
+
+            // Keep every power between -1.0 and 1.0
+            double max = Math.abs(frontLeftPower);
+            max = Math.max(max, Math.abs(frontRightPower));
+            max = Math.max(max, Math.abs(backLeftPower));
+            max = Math.max(max, Math.abs(backRightPower));
+            if (max > 1.0) {
+                frontLeftPower /= max;
+                frontRightPower /= max;
+                backLeftPower /= max;
+                backRightPower /= max;
+            }
+
+            // Send the power to the motors
+            frontLeft.setPower(frontLeftPower);
+            frontRight.setPower(frontRightPower);
+            backLeft.setPower(backLeftPower);
+            backRight.setPower(backRightPower);
+
+        }
+    }
+}
