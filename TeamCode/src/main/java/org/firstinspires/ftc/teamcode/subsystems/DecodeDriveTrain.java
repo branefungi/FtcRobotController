@@ -40,9 +40,11 @@ public class DecodeDriveTrain {
     public DecodeDriveTrain(HardwareMap hardwareMap, Gamepad gamepad, Telemetry telemetry, boolean showTelemetry, boolean fieldCentric){
         // Motor Mapping
         FL = hardwareMap.get(DcMotorEx.class, "FL");
-        FR = hardwareMap.get(DcMotorEx.class, "FR");
         BL = hardwareMap.get(DcMotorEx.class, "BL");
-        BR = hardwareMap.get(DcMotorEx.class, "BR");
+
+        FR = hardwareMap.get(DcMotorEx.class, "BR");
+
+        BR = hardwareMap.get(DcMotorEx.class, "FR");
         this.gamepad = gamepad;
         this.telemetry = telemetry;
         this.showTelemetry = showTelemetry;
@@ -53,7 +55,7 @@ public class DecodeDriveTrain {
         FR.setDirection(DcMotorEx.Direction.FORWARD);
         BR.setDirection(DcMotorEx.Direction.FORWARD);
         FL.setDirection(DcMotorEx.Direction.REVERSE);
-        BL.setDirection(DcMotorEx.Direction.FORWARD);
+        BL.setDirection(DcMotorEx.Direction.REVERSE);
 //
 //        FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

@@ -5,6 +5,7 @@ public final class RobotConstants {
     private RobotConstants() { }
 
     public static final String INTAKE_MOTOR = "intake";
+    public static final String TRANSFER_MOTOR = "transfer";
     public static final String TURRET_MOTOR = "turret";
     public static final String FLYWHEEL = "FW";
     public static final String FLYWHEEL_TWO_MOTOR = "FW2";

@@ -3,11 +3,6 @@ package org.firstinspires.ftc.teamcode.Teleop;
 import android.util.Size;
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.follower.Follower;
-import com.pedropathing.api.PoseFactory;
-import com.pedropathing.math.Pose;
-import com.pedropathing.paths.Path;
-import static com.pedropathing.api.Paths.*;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -42,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class TestTeleop extends LinearOpMode { // SIDE
     private DecodeDriveTrain drivetrain;
     private DcMotorEx intake;
+    private DcMotorEx transfer;
     private DcMotorEx turret;
     private DcMotorEx flyWheel1;
     private DcMotorEx flyWheel2;
@@ -59,7 +55,7 @@ public class TestTeleop extends LinearOpMode { // SIDE
     double hOffset = 0;
     double feedPower = 1;
 
-    boolean useWebcam = true;
+    boolean useWebcam = false;
     double intakePower = 0;
     double FWTarget = 0;
     double flapPos = 0.2;
@@ -74,8 +70,8 @@ public class TestTeleop extends LinearOpMode { // SIDE
     double elevation = 0;
     protected GoalPos goal;
 
-    private Follower follower;
-    private Pose pose;
+    //private Follower follower;
+    //private Pose pose;
     private boolean auto = false;
     private double gateAngle = gateAngle();
     private boolean a2Press = false;
@@ -132,7 +128,10 @@ public class TestTeleop extends LinearOpMode { // SIDE
         //follower.setStartingPose(new Pose(0,0,Math.toRadians(0)));
 
         intake = hardwareMap.get(DcMotorEx.class, RobotConstants.INTAKE_MOTOR);
-        intake.setDirection(DcMotorEx.Direction.REVERSE);
+        intake.setDirection(DcMotorEx.Direction.FORWARD);
+
+        transfer = hardwareMap.get(DcMotorEx.class, RobotConstants.TRANSFER_MOTOR);
+        transfer.setDirection(DcMotorEx.Direction.REVERSE);
 
         flyWheel1 = hardwareMap.get(DcMotorEx.class, RobotConstants.FLYWHEEL);
         flyWheel1.setDirection(DcMotorEx.Direction.REVERSE);
@@ -182,13 +181,13 @@ public class TestTeleop extends LinearOpMode { // SIDE
             FWV1 = flyWheel1.getVelocity();
             FWV2 = flyWheel2.getVelocity();
             FWV = Math.max(FWV1, FWV2);
-
+*/
             // set initial values
             if(!auto && !gamepad1.x){
                 intakePower = 0;
             }
-            */
 
+            /*
             // configure webcam
             if(!streamStarted && visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING){
                 camStreamingTime = opModeTimer.milliseconds();
@@ -199,22 +198,24 @@ public class TestTeleop extends LinearOpMode { // SIDE
             }
 
             angleFix();
+
+             */
             // all the movement controls.
             if(!auto){
                 drivetrain.Teleop(heading, gateAngle, angleFixed && !gamepad1.x);
             }
-
+            /*
             //aiming
             if(visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING){
                 List<AprilTagDetection> detectedTags = aprilTag.getDetections();
                 //aiming(detectedTags);
             }
-
+            */
             // intake controls
             if(!gamepad1.x) {
                 setIntakePower();
             }
-
+            /*
             //auto gate navigation
             if(gamepad1.dpad_down){
                 gateAngle = heading;
@@ -223,7 +224,7 @@ public class TestTeleop extends LinearOpMode { // SIDE
 //            if(gateButton){
 //                gate();
 //            }
-
+            */
             // outtake controls
             setIdlePower();
             if(!(gamepad1.left_trigger > 0.1 || gamepad1.a)){ // disable if manual intake
@@ -246,9 +247,10 @@ public class TestTeleop extends LinearOpMode { // SIDE
 
             // apply final values
             intake.setPower(intakePower);
+            transfer.setPower(intakePower*1.2);
             flyWheel1.setVelocity(FWTarget);
             //flyWheel2.setVelocity(FWTarget);
-            stopper.setPosition(stopperPos);
+            //stopper.setPosition(stopperPos);
 
             botTelemetry();
 
@@ -338,9 +340,9 @@ public class TestTeleop extends LinearOpMode { // SIDE
     public void setIntakePower(){
         if (gamepad1.left_trigger > 0.1) {
             stopperPos = 0.9;
-            intakePower = 1;
+            intakePower = 0.35;
         } else if(gamepad1.a){
-            intakePower = -0.5;
+            intakePower = -0.2;
         }
     }
 
@@ -501,7 +503,7 @@ public class TestTeleop extends LinearOpMode { // SIDE
         telemetry.addData("Flap", flapPos);
         telemetry.addData("turretPos", turretPos);
         telemetry.addData("auto", auto);
-        telemetry.addData("isBusy", follower.isBusy());
+        //telemetry.addData("isBusy", follower.isBusy());
         telemetry.update();
 
 
