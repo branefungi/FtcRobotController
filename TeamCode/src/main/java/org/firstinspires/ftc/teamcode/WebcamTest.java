@@ -30,10 +30,10 @@ public class WebcamTest extends LinearOpMode {
 
     // Camera exposure and gain
     private static final long EXPOSURE_MS = 10;
-    private static final int CAMERA_GAIN = 5;
+    private static final int CAMERA_GAIN = 1;
 
     // AprilTag configuration
-    private static final float APRILTAG_DECIMATION = 3;
+    private static final float APRILTAG_DECIMATION = 2;
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
@@ -154,8 +154,6 @@ public class WebcamTest extends LinearOpMode {
 
         ExposureControl exposureControl = visionPortal.getCameraControl(ExposureControl.class);
 
-        GainControl gainControl = visionPortal.getCameraControl(GainControl.class);
-
         // Configure exposure
         if (exposureControl != null && exposureControl.isModeSupported(ExposureControl.Mode.Manual)) {
 
@@ -176,25 +174,6 @@ public class WebcamTest extends LinearOpMode {
 
         } else {
             exposureStatus = "Manual exposure unavailable";
-        }
-
-        // Configure gain
-        if (gainControl != null) {
-
-            int minGain = gainControl.getMinGain();
-            int maxGain = gainControl.getMaxGain();
-
-            if (CAMERA_GAIN >= minGain && CAMERA_GAIN <= maxGain) {
-                boolean success = gainControl.setGain(CAMERA_GAIN);
-
-                gainStatus = success ? String.valueOf(CAMERA_GAIN) : "Failed to set";
-
-            } else {
-                gainStatus = "Outside supported range";
-            }
-
-        } else {
-            gainStatus = "Unavailable";
         }
     }
 
