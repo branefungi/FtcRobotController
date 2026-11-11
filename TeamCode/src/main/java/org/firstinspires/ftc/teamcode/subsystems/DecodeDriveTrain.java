@@ -42,9 +42,9 @@ public class DecodeDriveTrain {
         FL = hardwareMap.get(DcMotorEx.class, "FL");
         BL = hardwareMap.get(DcMotorEx.class, "BL");
 
-        FR = hardwareMap.get(DcMotorEx.class, "BR");
+        FR = hardwareMap.get(DcMotorEx.class, "FR");
 
-        BR = hardwareMap.get(DcMotorEx.class, "FR");
+        BR = hardwareMap.get(DcMotorEx.class, "BR");
         this.gamepad = gamepad;
         this.telemetry = telemetry;
         this.showTelemetry = showTelemetry;
