@@ -500,6 +500,7 @@ public class TestTeleop extends LinearOpMode { // SIDE
         flapPos = Range.clip(flapPos, 0, 0.22);
         flap.setPosition(flapPos);
 
+
          */
         if(gamepad2.dpad_down && !flapPressed){
 
