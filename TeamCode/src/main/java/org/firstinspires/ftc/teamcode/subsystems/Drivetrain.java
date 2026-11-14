@@ -57,7 +57,6 @@ public class Drivetrain{
 
 
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
-        configurePinpoint();
     }
     public void configurePinpoint(){
         /*

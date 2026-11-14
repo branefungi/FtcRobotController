@@ -31,10 +31,11 @@ public class Constants {
     public static PinpointConfig localizerConfig = new PinpointConfig(
             c -> {
                 c.name.set("pinpoint");
-                c.xPodOffset.set(-3.0);
-                c.yPodOffset.set(-0.75);
+                c.podType.set(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+                c.xPodOffset.set(-6.0); //3 //-5.131
+                c.yPodOffset.set(10.0); //-5.25 //6.028
                 c.xPodDirection.set(GoBildaPinpointDriver.EncoderDirection.FORWARD);
-                c.yPodDirection.set(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+                c.yPodDirection.set(GoBildaPinpointDriver.EncoderDirection.REVERSED);
             }
     );
     public static ForesightConfig foresightConfig = new ForesightConfig(

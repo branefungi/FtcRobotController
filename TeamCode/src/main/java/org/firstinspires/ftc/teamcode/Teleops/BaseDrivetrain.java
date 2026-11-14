@@ -2,9 +2,12 @@ package org.firstinspires.ftc.teamcode.Teleops;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.math.Pose;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 
@@ -19,11 +22,11 @@ public class BaseDrivetrain extends LinearOpMode { // SIDE
         // initializes movement motors
         drivetrain = new Drivetrain(hardwareMap, gamepad1, telemetry, true, false);
         follower = Constants.create(hardwareMap);
-        follower.setPose(new Pose(0, 0 , 0));
+        follower.setPose(new Pose(0, 0, 0));
         waitForStart();
 
         while (opModeIsActive()) {
-            follower.update();
+                follower.update();
             drivetrain.Teleop(0);
 
             telemetry.addData("X:", follower.pose().x());
@@ -32,14 +35,4 @@ public class BaseDrivetrain extends LinearOpMode { // SIDE
             telemetry.update();
         }
     }
-
-
-
-
-
-
-
-
-
-
 }
