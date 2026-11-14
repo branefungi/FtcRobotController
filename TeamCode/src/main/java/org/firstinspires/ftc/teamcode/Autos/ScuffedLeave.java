@@ -135,6 +135,7 @@ public class ScuffedLeave extends OpMode {
         FL.setDirection(DcMotorSimple.Direction.REVERSE);
         FR = hardwareMap.get(DcMotorEx.class, "FR");
         BL = hardwareMap.get(DcMotorEx.class, "BL");
+        BL.setDirection(DcMotorSimple.Direction.REVERSE);
         BR = hardwareMap.get(DcMotorEx.class, "BR");
 
         follower = Constants.create(hardwareMap);
@@ -178,11 +179,15 @@ public class ScuffedLeave extends OpMode {
         FR.setPower(0.5);
         BL.setPower(0.5);
         BR.setPower(0.5);
-
     }
 
     public void loop(){
-
+        if(opModeTimer.seconds() > 0.5){
+            FL.setPower(0);
+            FR.setPower(0);
+            BL.setPower(0);
+            BR.setPower(0);
+        }
     }
 
 }

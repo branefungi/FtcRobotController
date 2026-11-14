@@ -181,28 +181,13 @@ public class TestTeleop extends LinearOpMode { // SIDE
 
 
             // update variables
-/*
+
             follower.update();
-            pose = follower.getPose();
-            xPos = pose.getX();
-            yPos = pose.getY();
-            heading = pose.getHeading();
+            pose = follower.pose();
+            xPos = pose.x();
+            yPos = pose.y();
+            heading = pose.heading();
 
-            leadK = 0.002 * range + 0.2; //0.0033
-            shootXPos = follower.getVelocity().getXComponent() * leadK;
-            shootYPos = follower.getVelocity().getYComponent() * leadK;
-
-            Range.clip(leadK, 0, 0.4);
-            if(gamepad1.dpad_up || gamepad2.dpad_up){
-                headingOffset = heading;
-            }
-            range = goal.findRange(shootXPos + xPos, shootYPos + yPos);
-
-            turretPos = turret.getCurrentPosition();
-            FWV1 = flyWheel1.getVelocity();
-            FWV2 = flyWheel2.getVelocity();
-            FWV = Math.max(FWV1, FWV2);
-*/
             FWV = flyWheel1.getVelocity();
             // set initial values
             if(!auto && !gamepad1.x){
