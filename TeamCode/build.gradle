@@ -20,10 +20,16 @@ android {
     namespace = 'org.firstinspires.ftc.teamcode'
 
     packagingOptions {
+        jniLibs {
+            pickFirsts += ['**/*.so']
+        }
         jniLibs.useLegacyPackaging true
     }
 }
 
 dependencies {
     implementation project(':FtcRobotController')
+    implementation 'com.bylazar:fullpanels:1.0.12'
+    implementation 'com.pedropathing:ftc:2.1.2'
 }
+
