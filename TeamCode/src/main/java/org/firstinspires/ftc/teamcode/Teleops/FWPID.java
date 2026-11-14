@@ -15,15 +15,11 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
-import org.firstinspires.ftc.teamcode.subsystems.GoalPos;
+import org.firstinspires.ftc.teamcode.subsystems.ApriltagPos;
 import org.firstinspires.ftc.teamcode.subsystems.RobotConstants;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -85,7 +81,7 @@ public class FWPID extends LinearOpMode { // SIDE
     double camRange = 0;
     double bearing = 0;
     double elevation = 0;
-    protected GoalPos goal;
+    protected ApriltagPos goal;
 
     private Follower follower;
     private Pose pose;
@@ -111,8 +107,8 @@ public class FWPID extends LinearOpMode { // SIDE
     PIDFCoefficients fwPID = new PIDFCoefficients(RobotConstants.FLYWHEEL_P, RobotConstants.FLYWHEEL_I, RobotConstants.FLYWHEEL_D, RobotConstants.FLYWHEEL_F);
 
     //** Alliance-specific values overridden by {@link BlueTeleop}. */
-    protected GoalPos createGoal() {
-        return new GoalPos(30, 50, 15.5);
+    protected ApriltagPos createGoal() {
+        return new ApriltagPos(30, 50, 15.5);
     }
 
     protected double gateAngle() {

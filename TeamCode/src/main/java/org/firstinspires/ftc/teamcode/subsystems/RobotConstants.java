@@ -13,16 +13,15 @@ public final class RobotConstants {
     public static final String FLAP_SERVO = "flap";
     public static final String WEBCAM = "Webcam 1";
 
-    public static final double FLYWHEEL_P = 300;
+    public static final double FLYWHEEL_P = 350;
     public static final double FLYWHEEL_I = 0;
     public static final double FLYWHEEL_D = 0;
     public static final double FLYWHEEL_F = 13;
-    public static final double TURRET_MIN_TICKS = -1909;
-    public static final double TURRET_MAX_TICKS = 340;
+    public static final double TURRET_MIN_TICKS = -750;
+    public static final double TURRET_MAX_TICKS = 425;
     public static final double TURRET_TICKS_PER_DEGREE = 4.58195833333;
     public static final double CAMERA_FORWARD_OFFSET_IN = 2;
-    public static final int CAMERA_EXPOSURE_MS = 2;
-    public static final int CAMERA_GAIN = 100;
+    public static final int CAMERA_EXPOSURE_MS = 10;
     public static final String tagRA = "RED ALLIANCE";
     public static final String tagRS = "RED SCORING";
     public static final String tagBA = "BLUE ALLIANCE";

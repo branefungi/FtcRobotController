@@ -4,13 +4,13 @@ import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.util.Range;
 
-public class GoalPos {
+public class ApriltagPos {
     private double a;
     private double b;
     private double c;
-    private double camAngle = 20; //degrees
+    private double camAngle = 60; //degrees
 
-    public GoalPos(double X, double Y, double Z) {
+    public ApriltagPos(double X, double Y, double Z) {
         a = X;
         b = Y;
         c = Z;
@@ -51,10 +51,8 @@ public class GoalPos {
 //    }
 
     public void update(double alpha, double x, double y, double heading, double elevation, double dist){
-        dist *= 1.1076;
         elevation += Math.toRadians(camAngle);
         double phi = Math.PI/2 - elevation;
-        phi = Range.clip(phi, 0, Math.PI);
         double a2 = x + dist * Math.cos(heading) * Math.sin(phi);
         double b2 = y + dist * Math.sin(heading) * Math.sin(phi);
         double c2 = dist * Math.cos(phi);
@@ -62,9 +60,6 @@ public class GoalPos {
             a = a * (1 - alpha) + a2 * alpha;
             b = b * (1 - alpha) + b2 * alpha;
             c = c * (1 - alpha) + c2 * alpha;
-        }
-        if (c < 18){
-            c = 18;
         }
     }
 
