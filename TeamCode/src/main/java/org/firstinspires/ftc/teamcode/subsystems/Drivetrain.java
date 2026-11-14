@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -9,7 +10,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -18,7 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-public class DecodeDriveTrain {
+public class Drivetrain{
 
     // Instantiate the drivetrain motor variables
     private DcMotorEx FL; //Front left motor of drivetrain
@@ -35,35 +35,28 @@ public class DecodeDriveTrain {
     private boolean showTelemetry;
     private boolean fieldCentric;
 
-    private boolean fixedWasPressed;
 
-    public DecodeDriveTrain(HardwareMap hardwareMap, Gamepad gamepad, Telemetry telemetry, boolean showTelemetry, boolean fieldCentric){
+
+    public Drivetrain(HardwareMap hardwareMap, Gamepad gamepad, Telemetry telemetry, boolean showTelemetry, boolean fieldCentric){
         // Motor Mapping
         FL = hardwareMap.get(DcMotorEx.class, "FL");
+        FR = hardwareMap.get(DcMotorEx.class, "FR");
         BL = hardwareMap.get(DcMotorEx.class, "BL");
-
-        FR = hardwareMap.get(DcMotorEx.class, "BR");
-
-        BR = hardwareMap.get(DcMotorEx.class, "FR");
+        BR = hardwareMap.get(DcMotorEx.class, "BR");
         this.gamepad = gamepad;
         this.telemetry = telemetry;
         this.showTelemetry = showTelemetry;
         this.fieldCentric = fieldCentric;
-        this.fixedWasPressed = false;
+
 
         // Set motor direction based on which side of the robot the motors are on
         FR.setDirection(DcMotorEx.Direction.FORWARD);
         BR.setDirection(DcMotorEx.Direction.FORWARD);
         FL.setDirection(DcMotorEx.Direction.REVERSE);
         BL.setDirection(DcMotorEx.Direction.REVERSE);
-//
-//        FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-//        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
-//        configurePinpoint();
+
+        //pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
     }
     public void configurePinpoint(){
         /*
@@ -94,29 +87,21 @@ public class DecodeDriveTrain {
         pinpoint.resetPosAndIMU();
     }
 
-    public void Teleop(double heading, double gateAngle, boolean angleFixed){ //Code to be run in Teleop Mode void Loop at top level
+    public void Teleop(double heading){ //Code to be run in Teleop Mode void Loop at top level
+        Teleop(heading, -gamepad.left_stick_y,-gamepad.left_stick_x,-gamepad.right_stick_x);
+    }
+
+    public void Teleop(double heading, double y, double x, double r){ //Code to be run in Teleop Mode void Loop at top level
+        heading = -heading;
+
+        y = Range.clip(y, -1, 1);
+        x = Range.clip(x, -1, 1);
+        r = Range.clip(r, -1, 1);
 
         double PowerFL = 0;
         double PowerFR = 0;
         double PowerBL = 0;
         double PowerBR = 0;
-
-        double y = Range.clip(-gamepad.left_stick_y, -1, 1);
-        //left stick x value
-        double x = Range.clip(-gamepad.left_stick_x, -1, 1);
-        //right stick x value
-        double rx = -gamepad.right_stick_x;
-
-        if(angleFixed){
-            double error = (gateAngle - heading);
-            if (error > Math.PI) {
-                error -= 2 * Math.PI;
-            }else if(error < -Math.PI){
-                error += 2 * Math.PI;
-            }
-            rx = 2 * error;
-        }
-        rx = Range.clip(rx, -1, 1);
 
         if(gamepad.right_bumper){
             dampSpeedRatio = 1 - 0.6;
@@ -128,51 +113,61 @@ public class DecodeDriveTrain {
         if(gamepad.dpad_up){
             headingOffset = heading;
         }
-        double max;
         if (fieldCentric){
-            double fcHeading = -heading;
-            fcHeading -= headingOffset;
-            double axial   = y * Math.cos(fcHeading) - x * Math.sin(fcHeading);
-            double lateral = 1.2 * (y * Math.sin(fcHeading) + x * Math.cos(fcHeading));
+            heading -= headingOffset;
+            double max;
+            double axial   = y * Math.cos(heading) - x * Math.sin(heading);
+            double lateral = 0.7 * (y * Math.sin(heading) + x * Math.cos(heading));
+
             double turn     =  0.8 * -gamepad.right_stick_x;
 
             PowerFL = dampSpeedRatio*(axial - lateral) + turn*dampTurnRatio;
             PowerFR = dampSpeedRatio*(axial + lateral) - turn*dampTurnRatio;
             PowerBL = dampSpeedRatio*(axial + lateral) + turn*dampTurnRatio;
             PowerBR = dampSpeedRatio*(axial - lateral) - turn*dampTurnRatio;
+
+            // Normalize the values so no wheel power exceeds 100%
+            max = Math.max(Math.abs(PowerFL), Math.abs(PowerFR));
+            max = Math.max(max, Math.abs(PowerBL));
+            max = Math.max(max, Math.abs(PowerBR));
+
+            if (max > 1.0) {
+                PowerFL  /= max;
+                PowerFR /= max;
+                PowerBL   /= max;
+                PowerBR  /= max;
+            }
+            //telemetry.addData("heading",Math.toDegrees(heading));
+            FL.setPower(PowerFL);
+            FR.setPower(PowerFR);
+            BL.setPower(PowerBL);
+            BR.setPower(PowerBR);
         }
         else{
-            PowerFL = (y - x) * dampSpeedRatio + dampTurnRatio * rx;
-            PowerFR = (y + x) * dampSpeedRatio - dampTurnRatio * rx;
-            PowerBL = (y + x) * dampSpeedRatio + dampTurnRatio * rx;
-            PowerBR = (y - x) * dampSpeedRatio - dampTurnRatio * rx;
+
+            PowerFL = (y - x) * dampSpeedRatio + dampTurnRatio * r;
+            PowerFR = (y + x) * dampSpeedRatio - dampTurnRatio * r;
+            PowerBL = (y + x) * dampSpeedRatio + dampTurnRatio * r;
+            PowerBR = (y - x) * dampSpeedRatio - dampTurnRatio * r;
+
+            double maxFront = Math.max(PowerFL, PowerFR);
+            double maxBack = Math.max(PowerBL, PowerBR);
+            double maxPower = Math.max(maxFront, maxBack);
+
+            if (maxPower > 1.0) {
+                PowerFL /= maxPower;
+                PowerFR /= maxPower;
+                PowerBL /= maxPower;
+                PowerBR /= maxPower;
+            }
+            //finally moving the motors
+            FL.setPower(PowerFL);
+            BL.setPower(PowerBL);
+            FR.setPower(PowerFR);
+            BR.setPower(PowerBR);
         }
-        // Normalize the values so no wheel power exceeds 100%
-        max = Math.max(Math.abs(PowerFL), Math.abs(PowerFR));
-        max = Math.max(max, Math.abs(PowerBL));
-        max = Math.max(max, Math.abs(PowerBR));
-
-        if (max > 1.0) {
-            PowerFL  /= max;
-            PowerFR /= max;
-            PowerBL   /= max;
-            PowerBR  /= max;
-        }
-
-        //finally moving the motors
-        FL.setPower(PowerFL);
-        BL.setPower(PowerBL);
-        FR.setPower(PowerFR);
-        BR.setPower(PowerBR);
-
         if(showTelemetry) {
-            telemetry.addData("y", y);
-            telemetry.addData("x", x);
-            telemetry.addData("rx", rx);
-//            telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
-//            telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
-//            telemetry.addData("Heading angle (DEG)", pose2D.getHeading(AngleUnit.DEGREES));
-            telemetry.addData("FL Power", PowerFL);
+           telemetry.addData("FL Power", PowerFL);
             telemetry.addData("BL Power", PowerBL);
             telemetry.addData("FR Power", PowerFR);
             telemetry.addData("BR Power", PowerBR);
