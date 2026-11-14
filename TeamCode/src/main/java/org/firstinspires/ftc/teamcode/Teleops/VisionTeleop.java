@@ -66,7 +66,7 @@ public class VisionTeleop extends LinearOpMode { // SIDE
 
     //forward = 0, 2
     //backwards = 1, 3
-    double flapPos = 0.24;
+    double flapPos = 0.28;
     double stopperPos = 0.2;
     double turretPos;
     double FWV;
@@ -134,7 +134,7 @@ public class VisionTeleop extends LinearOpMode { // SIDE
         turret.setTargetPosition(0);
         turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         turret.setPower(1);
-        turret.setPositionPIDFCoefficients(12);
+        turret.setPositionPIDFCoefficients(15);
 
         stopper = hardwareMap.get(Servo.class, RobotConstants.STOPPER_SERVO);
         stopper.setDirection(Servo.Direction.FORWARD);
@@ -325,14 +325,12 @@ public class VisionTeleop extends LinearOpMode { // SIDE
 
 
                 bearing += startingAngle + Math.toDegrees(heading) + turretPos * (1/RobotConstants.TURRET_TICKS_PER_DEGREE);   // in degrees
-                telemetry.addData("bearing", bearing);
-                telemetry.addData("elevation", elevation);
                 bearing = Math.toRadians(bearing);
                 elevation = Math.toRadians(elevation);
 
                 if(((AprilTagClusterDetection) detection).metadata.name.equals("RED AUDIENCE")){
                     if(hasEstRA && !gamepad2.a){
-                        RA.update(0.15, xPos, yPos, bearing, elevation, camRange);
+                        RA.update(0.2, xPos, yPos, bearing, elevation, camRange);
                     }else{
                         RA.update(1, xPos, yPos, bearing, elevation, camRange);
                         hasEstRA = true;
@@ -341,7 +339,7 @@ public class VisionTeleop extends LinearOpMode { // SIDE
                 }
                 if(((AprilTagClusterDetection) detection).metadata.name.equals("RED SCORING")){
                     if(hasEstRS && !gamepad2.a){
-                        RS.update(0.15, xPos, yPos, bearing, elevation, camRange);
+                        RS.update(0.2, xPos, yPos, bearing, elevation, camRange);
                     }else{
                         RS.update(1, xPos, yPos, bearing, elevation, camRange);
                         hasEstRS = true;
@@ -351,8 +349,6 @@ public class VisionTeleop extends LinearOpMode { // SIDE
             }
         }
 
-
-        telemetry.addData("turret tgt degrees", turretTarget);
         if(RA.getZ() > RS.getZ()){
             turretTarget = RA.findAngle(xPos, yPos);
             range = RA.findRange(xPos, yPos);
