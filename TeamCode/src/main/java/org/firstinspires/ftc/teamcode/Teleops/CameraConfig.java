@@ -45,7 +45,7 @@ public class CameraConfig extends LinearOpMode { // SIDE
         follower = Constants.create(hardwareMap);
         follower.setPose(new Pose(0, 0, 0));
 
-        initAprilTag();
+        initWebcam();
 
         waitForStart();
 
@@ -72,7 +72,7 @@ public class CameraConfig extends LinearOpMode { // SIDE
     }
 
 
-    private void initAprilTag() {
+    private void initWebcam() {
 
         // Create AprilTag processor
         aprilTag = new AprilTagProcessor.Builder()

@@ -56,7 +56,7 @@ public class Drivetrain{
         BL.setDirection(DcMotorEx.Direction.REVERSE);
 
 
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        //pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
     }
     public void configurePinpoint(){
         /*

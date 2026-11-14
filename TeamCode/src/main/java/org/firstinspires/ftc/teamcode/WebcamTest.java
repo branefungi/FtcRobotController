@@ -51,7 +51,7 @@ public class WebcamTest extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        initAprilTag();
+        initWebcam();
 
         telemetry.addLine("Initializing ThriftyCam...");
         telemetry.update();
@@ -113,7 +113,7 @@ public class WebcamTest extends LinearOpMode {
         visionPortal.close();
     }
 
-    private void initAprilTag() {
+    private void initWebcam() {
 
         // Create AprilTag processor
         aprilTag = new AprilTagProcessor.Builder()
