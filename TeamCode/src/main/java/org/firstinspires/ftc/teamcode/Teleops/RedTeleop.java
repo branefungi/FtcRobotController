@@ -9,9 +9,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -22,42 +22,37 @@ import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.ApriltagPos;
 import org.firstinspires.ftc.teamcode.subsystems.RobotConstants;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-
-@TeleOp(name = "RUN THIS ONE", group = "TeleOp") // SIDE RED/BLUE
-
-public class TestTeleop extends LinearOpMode { // SIDE
+@TeleOp(name = "Red Teleop", group = "TeleOp")
+public class RedTeleop extends LinearOpMode {
     private Drivetrain drivetrain;
     private DcMotorEx intake;
     private DcMotorEx transfer;
     private DcMotorEx turret;
     private DcMotorEx flyWheel1;
-    private DcMotorEx flyWheel2;
     private Servo stopper;
     private Servo flap;
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
-    private boolean gainSet = false;
     boolean fieldCentric = false;
     private ElapsedTime opModeTimer = new ElapsedTime();
     private boolean streamStarted = false;
     private double camStreamingTime;
-
+    private boolean cameraSettingsApplied = false;
     double hOffset = 0;
     double feedPower = 1;
 
-    boolean useWebcam = false;
+    boolean useWebcam = true;
     double intakePower = 0;
     double FWTarget = 0;
     double FWVal = 1510;
-    //1627 for better first shot right in front
-    //1680 to get more balls in with full load
-    //1725 for better first shot in corner
-    //1790 to get more balls in with full load
     boolean FWPressed = false;
     double turretTarget = 0;
     int head = 0;
@@ -69,31 +64,27 @@ public class TestTeleop extends LinearOpMode { // SIDE
 
     //forward = 0, 2
     //backwards = 1, 3
-    double flapPos = 0.2;
+    double flapPos = 0.28;
     double stopperPos = 0.2;
     double turretPos;
-    double FWV1;
-    double FWV2;
     double FWV;
     boolean idle = false;
     double camRange = 0;
     double bearing = 0;
     double elevation = 0;
-    protected ApriltagPos goal;
-
+    double range = 30;
+    protected ApriltagPos tagA;
+    protected ApriltagPos tagS;
     private Follower follower;
     private Pose pose;
     private boolean auto = false;
-    private double gateAngle = gateAngle();
     private boolean a2Press = false;
-    private boolean hasEst = false;
-    private double range;
+    private double rangeRA = 30;
+    private double rangeRS = 30;
     private double height;
     private double xPos = 0, yPos = 0, heading = 0;
     private double leadK, shootXPos, shootYPos;
     private double headingOffset = 0;
-    private final double camOffsetX = 2; //inches (not really inches) forward of center
-    private final double camOffsetY = 0; //inches (not really inches) right of center
     private final double startingAngle = 0; // angle from straight forward (counterclockwise in degrees)
     private final double lowLimit = RobotConstants.TURRET_MIN_TICKS;
     private final double highLimit = RobotConstants.TURRET_MAX_TICKS;
@@ -104,37 +95,16 @@ public class TestTeleop extends LinearOpMode { // SIDE
 
     PIDFCoefficients fwPID = new PIDFCoefficients(RobotConstants.FLYWHEEL_P, RobotConstants.FLYWHEEL_I, RobotConstants.FLYWHEEL_D, RobotConstants.FLYWHEEL_F);
 
-    //** Alliance-specific values overridden by {@link BlueTeleop}. */
-    protected ApriltagPos createGoal() {
-        return new ApriltagPos(30, 50, 15.5);
-    }
-
-    protected double gateAngle() {
-        return Math.toRadians(30);
-    }
-
-    protected String targetAprilTagId() {
-        return RobotConstants.tagRA;
-    }
-
-    /** Sign applied to the horizontal aiming correction for this alliance. */
-    protected double horizontalCorrectionSign() {
-        return -1;
-    }
-
-    protected double[] hOffsetConstants(){
-        return new double[]{1.5,3.0};
-    } //2.0,3
-
-
-    protected boolean showVoltageTelemetry() {
-        return false;
+    protected String[] targetTagId() {
+        return new String[]{RobotConstants.TAG_RA, RobotConstants.TAG_RS};
     }
 
     @Override
     public void runOpMode() {
-        goal = createGoal();
-        //gatePos = createGatePose();
+
+        tagA = new ApriltagPos(30, 0, 48);
+        tagS = new ApriltagPos(100, 0, 24);
+
         // initializes movement motors
         drivetrain = new Drivetrain(hardwareMap, gamepad1, telemetry, false, fieldCentric);
         follower = Constants.create(hardwareMap);
@@ -144,7 +114,7 @@ public class TestTeleop extends LinearOpMode { // SIDE
         intake.setDirection(DcMotorEx.Direction.FORWARD);
 
         transfer = hardwareMap.get(DcMotorEx.class, RobotConstants.TRANSFER_MOTOR);
-        transfer.setDirection(DcMotorEx.Direction.REVERSE);
+        transfer.setDirection(DcMotorEx.Direction.FORWARD);
 
         flyWheel1 = hardwareMap.get(DcMotorEx.class, RobotConstants.FLYWHEEL);
         flyWheel1.setDirection(DcMotorEx.Direction.REVERSE);
@@ -167,12 +137,20 @@ public class TestTeleop extends LinearOpMode { // SIDE
         flap.setDirection(Servo.Direction.FORWARD);
 
 
-        //initWebcam();
+        initWebcam();
         waitForStart();
         opModeTimer.reset();
 
         while (opModeIsActive()) {
+            if (!streamStarted && visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+                camStreamingTime = opModeTimer.milliseconds();
+                streamStarted = true;
+            }
 
+            if (streamStarted && !cameraSettingsApplied && opModeTimer.milliseconds() > camStreamingTime + 500) {
+                cameraSettingsApplied = true;
+                cameraControls();
+            }
 
             // update variables
 
@@ -181,6 +159,10 @@ public class TestTeleop extends LinearOpMode { // SIDE
             xPos = pose.x();
             yPos = pose.y();
             heading = pose.heading();
+            rangeRA = tagA.findRange(xPos, yPos);
+            rangeRS = tagS.findRange(xPos, yPos);
+
+            turretPos = turret.getCurrentPosition();
 
             FWV = flyWheel1.getVelocity();
             // set initial values
@@ -188,16 +170,9 @@ public class TestTeleop extends LinearOpMode { // SIDE
                 intakePower = 0;
             }
 
-/*
-            // configure webcam
-            if(!streamStarted && visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING){
-                camStreamingTime = opModeTimer.milliseconds();
-                streamStarted = true;
-            }
-            if(!gainSet && streamStarted && opModeTimer.milliseconds() > camStreamingTime + 500){
-                gainSet = cameraControls();
-            }
-*/
+
+
+
             angleFix();
 
 
@@ -205,37 +180,16 @@ public class TestTeleop extends LinearOpMode { // SIDE
             if(!auto){
                 drivetrain.Teleop(heading);
             }
-            /*
-            if(gamepad2.x && !FWPressed){
-                if(gamepad2.y){
-                    turretTarget-=10;
-                }
-                else{
-                    turretTarget-=1;
-                }
-                FWPressed = true;
-            }
-            if(gamepad2.b && !FWPressed){
-                if(gamepad2.y){
-                    turretTarget+=10;
-                }
-                else{
-                    turretTarget+=1;
-                }
-                FWPressed = true;
-            }
-            if(!gamepad2.b && !gamepad2.x) {
-                FWPressed = false;
-            }
 
-             */
             //aiming
-            //if(visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING){
-            //List<AprilTagDetection> detectedTags = new ;
-            aiming();
-            //turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            //turret.setTargetPosition((int) (4.58195833333*turretTarget));
-            //}
+            if(visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING){
+                List<AprilTagDetection> detectedTags = aprilTag.getDetections();
+                aiming(detectedTags);
+                if(!tagA.isFound() && !tagS.isFound()){
+                    turretTarget = 0;
+                }
+                turret.setTargetPosition((int) (turretTarget));
+            }
 
             // intake controls
             if(!gamepad1.x) {
@@ -248,15 +202,16 @@ public class TestTeleop extends LinearOpMode { // SIDE
                 firing();
             }
 
-            // parking
-            boolean brakeButton = /*gamepad1.x ||*/ (gamepad2.right_trigger > 0.7 && gamepad2.left_trigger > 0.7);
-            if(brakeButton){
-                //brake();
-            }
+//            // parking
+//            boolean brakeButton = /*gamepad1.x ||*/ (gamepad2.right_trigger > 0.7 && gamepad2.left_trigger > 0.7);
+//            if(brakeButton){
+//                //brake();
+//            }
 
 
             // apply final values
-            intake.setPower(intakePower);
+            flap.setPosition(flapPos);
+            intake.setPower(0);
             transfer.setPower(intakePower*1.4);
             flyWheel1.setVelocity(FWTarget);
             stopper.setPosition(stopperPos);
@@ -315,7 +270,7 @@ public class TestTeleop extends LinearOpMode { // SIDE
         // Configure exposure
         if (exposureControl != null && exposureControl.isModeSupported(ExposureControl.Mode.Manual)) {
             exposureControl.setMode(ExposureControl.Mode.Manual);
-            exposureControl.setExposure(10, TimeUnit.MILLISECONDS);
+            exposureControl.setExposure(RobotConstants.CAMERA_EXPOSURE_MS, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -354,118 +309,81 @@ public class TestTeleop extends LinearOpMode { // SIDE
         }
     }
 
-    public void aiming(){
-        /*
-        //        telemetry.addData("xV", follower.getVelocity().getYComponent());
-        //        telemetry.addData("yV", follower.getVelocity().getXComponent());
+    public void aiming(List<AprilTagDetection> detectedTags){
         for (AprilTagDetection detection : detectedTags) {
-            if (detection.metadata != null && detection.id == targetAprilTagId()) {
-                camRange = detection.ftcPose.range + camOffsetX;
-                bearing = detection.ftcPose.bearing;
-                elevation = detection.ftcPose.elevation;
+            if (detection instanceof AprilTagClusterDetection) {
+                telemetry.addData("TAGS", ((AprilTagClusterDetection) detection).metadata.name);
+                camRange = 0.665 * Math.sqrt(
+                        Math.pow(detection.ftcPose.x, 2) +
+                                Math.pow(detection.ftcPose.y, 2) +
+                                Math.pow(detection.ftcPose.z, 2)
+                ) - RobotConstants.CAMERA_FORWARD_OFFSET_IN;
+                bearing = detection.ftcPose.elevation;
+                elevation = -detection.ftcPose.bearing + RobotConstants.CAMERA_ANGLE;
+
 
                 bearing += startingAngle + Math.toDegrees(heading) + turretPos * (1/RobotConstants.TURRET_TICKS_PER_DEGREE);   // in degrees
                 bearing = Math.toRadians(bearing);
                 elevation = Math.toRadians(elevation);
-                if(hasEst){
-                    goal.update(0.15, xPos, yPos, bearing, elevation, camRange);
-                }else{
-                    goal.update(1, xPos, yPos, bearing, elevation, camRange);
-                    hasEst = true;
-                }
 
-                break;
+                if(((AprilTagClusterDetection) detection).metadata.name.equals(targetTagId()[0])){
+                    if(tagA.isFound() && !gamepad2.a){
+                        tagA.update(0.2, xPos, yPos, bearing, elevation, camRange);
+                    }else{
+                        tagA.update(1, xPos, yPos, bearing, elevation, camRange);
+                    }
+                    if(tagA.status() == ApriltagPos.Status.ACTIVE){
+                        tagS.setZ(29);
+                        tagS.setStatus(ApriltagPos.Status.INACTIVE);
+                    }
+                    if(tagA.status() == ApriltagPos.Status.INACTIVE){
+                        tagS.setZ(48);
+                        tagS.setStatus(ApriltagPos.Status.ACTIVE);
+                    }
+                    continue;
+                }
+                if(((AprilTagClusterDetection) detection).metadata.name.equals(targetTagId()[1])){
+                    if(tagS.isFound() && !gamepad2.a){
+                        tagS.update(0.2, xPos, yPos, bearing, elevation, camRange);
+                    }else{
+                        tagS.update(1, xPos, yPos, bearing, elevation, camRange);
+                    }
+                    if(tagS.status() == ApriltagPos.Status.ACTIVE){
+                        tagA.setZ(29);
+                        tagA.setStatus(ApriltagPos.Status.INACTIVE);
+                    }
+                    if(tagS.status() == ApriltagPos.Status.INACTIVE){
+                        tagA.setZ(48);
+                        tagA.setStatus(ApriltagPos.Status.ACTIVE);
+                    }
+                    continue;
+                }
             }
         }
 
-        //required turret angle
-        if(range < 100){
-            hOffset = hOffsetConstants()[0];
-        } else{
-            hOffset = hOffsetConstants()[1];
+        if(tagS.status() == ApriltagPos.Status.ACTIVE){
+            turretTarget = tagA.findAngle(xPos, yPos);
+            range = tagA.findRange(xPos, yPos);
+        }else {
+            turretTarget = tagA.findAngle(xPos, yPos);
+            range = tagA.findRange(xPos, yPos);
         }
 
-        */
-        /*
-        double turretTarget = goal.findAngle(shootXPos + xPos, shootYPos + yPos)
-                - startingAngle
-                - Math.toDegrees(heading)
-                + horizontalCorrectionSign() * Math.toDegrees(Math.atan2(hOffset, range));
-
-
-        //telemetry.addData("pre wrap target", 976.0 / 180.0 * turretTarget);
+        turretTarget = turretTarget - startingAngle - Math.toDegrees(heading);
         if (turretTarget > highLimit * (1/RobotConstants.TURRET_TICKS_PER_DEGREE) + 30.0) { //wrap angle
             turretTarget -= 360;
         } else if (turretTarget < lowLimit * (1/RobotConstants.TURRET_TICKS_PER_DEGREE) - 30.0) {
             turretTarget += 360;
         }
-        turretTarget = RobotConstants.TURRET_TICKS_PER_DEGREE * turretTarget; // convert to encoder ticks
+        turretTarget = RobotConstants.TURRET_TICKS_PER_DEGREE * (turretTarget); // convert to encoder ticks
         // hardware limit
         turretTarget = Range.clip(turretTarget, lowLimit, highLimit); //(Math.toDegrees(Math.atan(3.5 / range)));
-        */
-
-        if (gamepad2.a){
-            goal.update(1, xPos, yPos, bearing, elevation, camRange);
-            double turretPower = 0;
-            if(!a2Press){
-                turret.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-                a2Press = true;
-            }
-            if(gamepad2.left_bumper){
-                turretPower = 0.4;
-            } else if (gamepad2.right_bumper){
-                turretPower = -0.4;
-            }else{
-                turretPower = 0;
-            }
-            if(gamepad2.y){
-                turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
-            turret.setPower(turretPower);
-        }else{ // manual aiming
-            if(a2Press){
-
-                /*
-                switch(head){
-                    case 0:
-                        turret.setPower(0);
-                        break;
-                    case 1:
-                        turret.setPower(1);
-                        break;
-                    case 2:
-                        turret.setPower(-1);
-                        break;
-                    case 3:
-                        turret.setPower(-2);
-                        break;
-                }
-
-                 */
-
-                a2Press = false;
-            }
-
-
-            turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            turret.setTargetPosition((int) (4.58195833333*turretTarget));
-        }
 
 
     }
 
 
     public void firing(){
-        //setting flap position
-        /*
-        flapPos = 0.02104 * Math.pow(range - 50, 0.6);
-        if(!Double.isFinite(flapPos)){ flapPos = 0;}
-        flapPos = Range.clip(flapPos, 0, 0.22);
-        flap.setPosition(flapPos);
-
-
-         */
         if(gamepad2.dpad_down && !flapPressed){
 
             flapPos-=0.02;
@@ -480,58 +398,21 @@ public class TestTeleop extends LinearOpMode { // SIDE
         if(!gamepad2.dpad_down && !gamepad2.dpad_up){
             flapPressed = false;
         }
-        flapPos = Range.clip(flapPos, 0, 0.38);
-        flap.setPosition(flapPos);
-
-
-
-
-/*
-        if(range < 100) {
-            FWTarget = 0.903*range * 8 + 970 ;  //0.903*range * 8 + 960
-            feedPower = 1;
-        } else {
-            FWTarget = 0.903*range * 7.462 + 970; //0.903*range * 7.462 + 975
-            feedPower = 0.75;
-        }
-
- */
-
-        if(gamepad2.x && !FWPressed){
-            if(gamepad2.y){
-                FWVal-=10;
-            }
-            else{
-                FWVal-=1;
-            }
-            FWPressed = true;
-        }
-        if(gamepad2.b && !FWPressed){
-            if(gamepad2.y){
-                FWVal+=10;
-            }
-            else{
-                FWVal+=1;
-            }
-            FWPressed = true;
-        }
-        if(!gamepad2.b && !gamepad2.x){
-            FWPressed = false;
-        }
-
-
 
         FWTarget = FWVal;
         feedPower = 0.85;
         if (gamepad1.x) {
 
             //setting target velocity
-
-
             if(Math.abs(FWV) >= Math.abs(FWTarget)){
-
+                if(timerReset){
+                    turretTimer.reset();
+                    timerReset = true;
+                }
                 stopperPos = 0.275;  // open
-                intakePower = feedPower;
+                intakePower = Math.min(feedPower + 2 * turretTimer.milliseconds(), feedPower+500);
+            }else{
+                timerReset = false;
             }
         } else {
             stopperPos = 0.2; // closed
@@ -543,57 +424,24 @@ public class TestTeleop extends LinearOpMode { // SIDE
         }
     }
 
-/*
-    public void brake(){
-        if(!auto){
-            PathChain hold = follower.pathBuilder()
-                    .addPath(new BezierLine(follower.getPose(), new Pose(xPos + 0.01, yPos, heading)))
-                    .setConstantHeadingInterpolation(heading)
-                    .setBrakingStrength(0.4)
-                    .build();
-            follower.followPath(hold,1, true);
-            auto = true;
-        }
-    }
-*/
-//    public void gate(){
-//        if(!auto){
-//            PathChain gate = follower.pathBuilder()
-//                    .addPath(new BezierLine(pose, gatePos))
-//                    .setLinearHeadingInterpolation(heading, gatePos.getHeading())
-//                    .setBrakingStrength(0.4)
-//                    .build();
-//            follower.followPath(gate, true);
-//            auto = true;
-//        }
-//    }
 
     public void botTelemetry(){
-        if (showVoltageTelemetry()) {
-            for (VoltageSensor sensor : hardwareMap.voltageSensor) {
-                telemetry.addData(sensor.getDeviceName(), sensor.getVoltage());
-            }
-        }
-        //telemetry.addData("Cam Status", visionPortal.getCameraState());
-        //telemetry.addData("Cam Setup", gainSet);
-        //telemetry.addData("Goal Position", goal);
-        //telemetry.addData("Range", range);
-        telemetry.addData("targetVel", FWTarget);
-        //telemetry.addData("FWV1", FWV1);
-        //telemetry.addData("FWV2", FWV2);
-        telemetry.addData("Flap", flapPos);
-        telemetry.addData("turretPos", turretPos);
-        //telemetry.addData("auto", auto);
-        telemetry.addData("stopper", stopperPos);
-
+        telemetry.addData("range", range);
         telemetry.addData("xPos", xPos);
         telemetry.addData("yPos", yPos);
-
+        telemetry.addData("Range RA", rangeRA);
+        telemetry.addData("Range RS", rangeRS);
+        telemetry.addData("Audience", tagA);
+        telemetry.addData("audience status", tagA.status());
+        telemetry.addData("Scoring", tagS);
+        telemetry.addData("scoring status", tagS.status());
+        telemetry.addData("targetVel", FWTarget);
+        telemetry.addData("turretPos", turretPos);
         telemetry.addData("turret speed target", FWVal);
+
 
         telemetry.addData("turret target", turretTarget);
         telemetry.addData("Turret Ticks", turret.getCurrentPosition());
-        //telemetry.addData("isBusy", follower.isBusy());
         telemetry.update();
 
 

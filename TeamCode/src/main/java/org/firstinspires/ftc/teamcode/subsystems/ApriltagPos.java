@@ -2,18 +2,24 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import androidx.annotation.NonNull;
 
-import com.qualcomm.robotcore.util.Range;
-
 public class ApriltagPos {
+    private boolean found;
     private double a;
     private double b;
     private double c;
-    private double camAngle = 60; //degrees
+    public enum Status{
+        ACTIVE,
+        INACTIVE,
+        NEITHER
+    }
+    private Status status;
 
     public ApriltagPos(double X, double Y, double Z) {
+        found = false;
         a = X;
         b = Y;
         c = Z;
+        status = Status.NEITHER;
     }
 
     public void setX(double n) {
@@ -28,16 +34,28 @@ public class ApriltagPos {
         c = n;
     }
 
-    public double getX() {
+    public void setStatus(Status status){
+        this.status = status;
+    }
+
+    public boolean isFound(){
+        return found;
+    }
+
+    public double x() {
         return a;
     }
 
-    public double getY() {
+    public double y() {
         return b;
     }
 
-    public double getZ(){
+    public double z(){
         return c;
+    }
+
+    public Status status(){
+        return status;
     }
 
 //    public void update(double weight, double x, double y, double heading, double elevation) {
@@ -51,15 +69,24 @@ public class ApriltagPos {
 //    }
 
     public void update(double alpha, double x, double y, double heading, double elevation, double dist){
-        elevation += Math.toRadians(camAngle);
         double phi = Math.PI/2 - elevation;
         double a2 = x + dist * Math.cos(heading) * Math.sin(phi);
         double b2 = y + dist * Math.sin(heading) * Math.sin(phi);
-        double c2 = dist * Math.cos(phi);
+        double c2 = RobotConstants.CAMERA_HEIGHT + dist * Math.cos(phi);
         if(Double.isFinite(a2) && Double.isFinite(b2) && Double.isFinite(c2)) {
+            found = true;
             a = a * (1 - alpha) + a2 * alpha;
             b = b * (1 - alpha) + b2 * alpha;
             c = c * (1 - alpha) + c2 * alpha;
+        }
+        if(found){
+            if(c > 40) {
+                status = Status.ACTIVE;
+            }else if(c < 30){
+                status = Status.INACTIVE;
+            }else{
+                status = Status.NEITHER;
+            }
         }
     }
 

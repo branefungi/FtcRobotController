@@ -20,10 +20,12 @@ public final class RobotConstants {
     public static final double TURRET_MIN_TICKS = -750;
     public static final double TURRET_MAX_TICKS = 425;
     public static final double TURRET_TICKS_PER_DEGREE = 4.58195833333;
-    public static final double CAMERA_FORWARD_OFFSET_IN = 2;
+    public static final double CAMERA_HEIGHT = 12; //camera inches above the ground
+    public static final double CAMERA_FORWARD_OFFSET_IN = 0; //offset in direction camera is facing, in front of center is positive
+    public static final double CAMERA_ANGLE = 60; // degrees from facing straight forward (angled up is positive)
     public static final int CAMERA_EXPOSURE_MS = 10;
-    public static final String tagRA = "RED ALLIANCE";
-    public static final String tagRS = "RED SCORING";
-    public static final String tagBA = "BLUE ALLIANCE";
-    public static final String tagBS = "BLUE SCORING";
+    public static final String TAG_RA = "RED AUDIENCE";
+    public static final String TAG_RS = "RED SCORING";
+    public static final String TAG_BA = "BLUE AUDIENCE";
+    public static final String TAG_BS = "BLUE SCORING";
 }

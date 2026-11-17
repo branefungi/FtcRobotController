@@ -1,18 +1,16 @@
-package org.firstinspires.ftc.teamcode.Teleops;
+package org.firstinspires.ftc.teamcode;
 
 import android.util.Size;
 
 import com.pedropathing.follower.Follower;
 
 import com.pedropathing.math.Pose;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -30,9 +28,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@TeleOp(name = "Vision Op", group = "TeleOp") // SIDE RED/BLUE
-
-public class VisionTeleop extends LinearOpMode { // SIDE
+@TeleOp(name = "FW Testing", group = "TeleOp")
+public class FWTest extends LinearOpMode {
     private Drivetrain drivetrain;
     private DcMotorEx intake;
     private DcMotorEx transfer;
@@ -75,23 +72,19 @@ public class VisionTeleop extends LinearOpMode { // SIDE
     double bearing = 0;
     double elevation = 0;
     double range = 30;
-    protected ApriltagPos RA;
-    protected ApriltagPos RS;
+    protected ApriltagPos tagA;
+    protected ApriltagPos tagS;
 
     private Follower follower;
     private Pose pose;
     private boolean auto = false;
     private boolean a2Press = false;
-    private boolean hasEstRA = false;
-    private boolean hasEstRS = false;
     private double rangeRA = 30;
     private double rangeRS = 30;
     private double height;
     private double xPos = 0, yPos = 0, heading = 0;
     private double leadK, shootXPos, shootYPos;
     private double headingOffset = 0;
-    private final double camOffsetX = 2; //inches (not really inches) forward of center
-    private final double camOffsetY = 0; //inches (not really inches) right of center
     private final double startingAngle = 0; // angle from straight forward (counterclockwise in degrees)
     private final double lowLimit = RobotConstants.TURRET_MIN_TICKS;
     private final double highLimit = RobotConstants.TURRET_MAX_TICKS;
@@ -102,14 +95,14 @@ public class VisionTeleop extends LinearOpMode { // SIDE
 
     PIDFCoefficients fwPID = new PIDFCoefficients(RobotConstants.FLYWHEEL_P, RobotConstants.FLYWHEEL_I, RobotConstants.FLYWHEEL_D, RobotConstants.FLYWHEEL_F);
 
-    protected String targetAprilTagId() {
-        return RobotConstants.tagRA;
+    protected String[] targetTagId() {
+        return new String[]{RobotConstants.TAG_RA, RobotConstants.TAG_RS};
     }
 
     @Override
     public void runOpMode() {
-        RA = new ApriltagPos(30, 0, 30);
-        RS = new ApriltagPos(100, 0, 30);
+        tagA = new ApriltagPos(30, 0, 48);
+        tagS = new ApriltagPos(100, 0, 24);
 
         // initializes movement motors
         drivetrain = new Drivetrain(hardwareMap, gamepad1, telemetry, false, fieldCentric);
@@ -165,8 +158,8 @@ public class VisionTeleop extends LinearOpMode { // SIDE
             xPos = pose.x();
             yPos = pose.y();
             heading = pose.heading();
-            rangeRA = RA.findRange(xPos, yPos);
-            rangeRS = RS.findRange(xPos, yPos);
+            rangeRA = tagA.findRange(xPos, yPos);
+            rangeRS = tagS.findRange(xPos, yPos);
 
             turretPos = turret.getCurrentPosition();
 
@@ -205,11 +198,11 @@ public class VisionTeleop extends LinearOpMode { // SIDE
                 firing();
             }
 
-            // parking
-            boolean brakeButton = /*gamepad1.x ||*/ (gamepad2.right_trigger > 0.7 && gamepad2.left_trigger > 0.7);
-            if(brakeButton){
-                //brake();
-            }
+//            // parking
+//            boolean brakeButton = /*gamepad1.x ||*/ (gamepad2.right_trigger > 0.7 && gamepad2.left_trigger > 0.7);
+//            if(brakeButton){
+//                //brake();
+//            }
 
 
             // apply final values
@@ -273,7 +266,7 @@ public class VisionTeleop extends LinearOpMode { // SIDE
         // Configure exposure
         if (exposureControl != null && exposureControl.isModeSupported(ExposureControl.Mode.Manual)) {
             exposureControl.setMode(ExposureControl.Mode.Manual);
-            exposureControl.setExposure(10, TimeUnit.MILLISECONDS);
+            exposureControl.setExposure(RobotConstants.CAMERA_EXPOSURE_MS, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -319,43 +312,42 @@ public class VisionTeleop extends LinearOpMode { // SIDE
                         Math.pow(detection.ftcPose.x, 2) +
                                 Math.pow(detection.ftcPose.y, 2) +
                                 Math.pow(detection.ftcPose.z, 2)
-                );
+                ) - RobotConstants.CAMERA_FORWARD_OFFSET_IN;
                 bearing = detection.ftcPose.elevation;
-                elevation = -detection.ftcPose.bearing;
+                elevation = -detection.ftcPose.bearing + RobotConstants.CAMERA_ANGLE;
 
 
                 bearing += startingAngle + Math.toDegrees(heading) + turretPos * (1/RobotConstants.TURRET_TICKS_PER_DEGREE);   // in degrees
                 bearing = Math.toRadians(bearing);
                 elevation = Math.toRadians(elevation);
 
-                if(((AprilTagClusterDetection) detection).metadata.name.equals("RED AUDIENCE")){
-                    if(hasEstRA && !gamepad2.a){
-                        RA.update(0.2, xPos, yPos, bearing, elevation, camRange);
+                if(((AprilTagClusterDetection) detection).metadata.name.equals(targetTagId()[0])){
+                    if(tagA.isFound() && !gamepad2.a){
+                        tagA.update(0.2, xPos, yPos, bearing, elevation, camRange);
                     }else{
-                        RA.update(1, xPos, yPos, bearing, elevation, camRange);
-                        hasEstRA = true;
+                        tagA.update(1, xPos, yPos, bearing, elevation, camRange);
                     }
                     continue;
                 }
-                if(((AprilTagClusterDetection) detection).metadata.name.equals("RED SCORING")){
-                    if(hasEstRS && !gamepad2.a){
-                        RS.update(0.2, xPos, yPos, bearing, elevation, camRange);
+                if(((AprilTagClusterDetection) detection).metadata.name.equals(targetTagId()[1])){
+                    if(tagS.isFound() && !gamepad2.a){
+                        tagS.update(0.2, xPos, yPos, bearing, elevation, camRange);
                     }else{
-                        RS.update(1, xPos, yPos, bearing, elevation, camRange);
-                        hasEstRS = true;
+                        tagS.update(1, xPos, yPos, bearing, elevation, camRange);
                     }
                     continue;
                 }
             }
         }
 
-        if(RA.getZ() > RS.getZ()){
-            turretTarget = RA.findAngle(xPos, yPos);
-            range = RA.findRange(xPos, yPos);
-        }else{
-            turretTarget = RS.findAngle(xPos, yPos);
-            range = RS.findRange(xPos, yPos);
+        if(tagS.status() == ApriltagPos.Status.ACTIVE){
+            turretTarget = tagS.findAngle(xPos, yPos);
+            range = tagS.findRange(xPos, yPos);
+        }else {
+            turretTarget = tagA.findAngle(xPos, yPos);
+            range = tagA.findRange(xPos, yPos);
         }
+
         turretTarget = turretTarget - startingAngle - Math.toDegrees(heading);
         if (turretTarget > highLimit * (1/RobotConstants.TURRET_TICKS_PER_DEGREE) + 30.0) { //wrap angle
             turretTarget -= 360;
@@ -382,9 +374,21 @@ public class VisionTeleop extends LinearOpMode { // SIDE
 
             flapPressed = true;
         }
-        if(!gamepad2.dpad_down && !gamepad2.dpad_up){
+
+        if(gamepad2.dpad_up && !flapPressed){
+            FWVal += 10;
+            flapPressed = true;
+        }
+        if(gamepad2.dpad_down && !flapPressed){
+            FWVal -= 10;
+            flapPressed = true;
+        }
+
+        if(!gamepad2.dpad_down && !gamepad2.dpad_up && !gamepad2.dpad_right && !gamepad2.dpad_left){
             flapPressed = false;
         }
+
+
 
         FWTarget = FWVal;
         feedPower = 0.85;
@@ -403,35 +407,27 @@ public class VisionTeleop extends LinearOpMode { // SIDE
             }
         } else {
             stopperPos = 0.2; // closed
-            if(idle) {
-                FWTarget *= 0.75;
-            } else{
-                FWTarget = 0;
-            }
+            FWTarget = 0;
         }
     }
 
 
     public void botTelemetry(){
         telemetry.addData("range", range);
+        telemetry.addData("turret speed target", FWVal);
+        telemetry.addData("flap pos", flapPos);
         telemetry.addData("xPos", xPos);
         telemetry.addData("yPos", yPos);
-        telemetry.addData("Range RA", rangeRA);
-        telemetry.addData("Range RS", rangeRS);
-        telemetry.addData("RA", RA);
-        telemetry.addData("RS", RS);
-        telemetry.addData("targetVel", FWTarget);
+
+        telemetry.addData("Audience", tagA);
+        telemetry.addData("audience status", tagA.status());
+        telemetry.addData("Scoring", tagS);
+        telemetry.addData("scoring status", tagA.status());
+
         telemetry.addData("turretPos", turretPos);
-        telemetry.addData("turret speed target", FWVal);
-
-
-        telemetry.addData("turret target", turretTarget);
         telemetry.addData("Turret Ticks", turret.getCurrentPosition());
+        telemetry.addData("turret target", turretTarget);
         telemetry.update();
-
-
-
-
     }
 
 
