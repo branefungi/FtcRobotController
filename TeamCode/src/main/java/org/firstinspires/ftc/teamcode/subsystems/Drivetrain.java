@@ -58,34 +58,6 @@ public class Drivetrain{
 
         //pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
     }
-    public void configurePinpoint(){
-        /*
-         *  The X pod offset refers to how far sideways from the tracking point the X (forward) odometry pod is.
-         *  Left of the center is a positive number, right of center is a negative number.
-         *
-         *  The Y pod offset refers to how far forwards from the tracking point the Y (strafe) odometry pod is.
-         *  Forward of center is a positive number, backwards is a negative number.
-         */
-        pinpoint.setOffsets(-2.36, -0.94, DistanceUnit.INCH); //these are tuned for 3110-0002-0001 Product Insight #1
-
-        /*
-         * Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either
-         * the goBILDA_SWINGARM_POD, or the goBILDA_4_BAR_POD.
-         * If you're using another kind of odometry pod, uncomment setEncoderResolution and input the
-         * number of ticks per unit of your odometry pod.  For example:
-         *     pinpoint.setEncoderResolution(13.26291192, DistanceUnit.MM);
-         */
-        pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD);
-
-        /*
-         * Set the direction that each of the two odometry pods count. The X (forward) pod should
-         * increase when you move the robot forward. And the Y (strafe) pod should increase when
-         * you move the robot to the left.
-         */
-        pinpoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED,
-                GoBildaPinpointDriver.EncoderDirection.FORWARD);
-        pinpoint.resetPosAndIMU();
-    }
 
     public void Teleop(double heading){ //Code to be run in Teleop Mode void Loop at top level
         Teleop(heading, -gamepad.left_stick_y,-gamepad.left_stick_x,-gamepad.right_stick_x);

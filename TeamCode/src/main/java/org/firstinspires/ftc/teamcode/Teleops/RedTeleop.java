@@ -88,8 +88,6 @@ public class RedTeleop extends LinearOpMode {
     private final double startingAngle = 0; // angle from straight forward (counterclockwise in degrees)
     private final double lowLimit = RobotConstants.TURRET_MIN_TICKS;
     private final double highLimit = RobotConstants.TURRET_MAX_TICKS;
-    private boolean angleFixed = false;
-
     private ElapsedTime turretTimer = new ElapsedTime();
     private boolean timerReset = false;
 
@@ -169,11 +167,6 @@ public class RedTeleop extends LinearOpMode {
             if(!auto && !gamepad1.x){
                 intakePower = 0;
             }
-
-
-
-
-            angleFix();
 
 
             // all the movement controls.
@@ -297,15 +290,6 @@ public class RedTeleop extends LinearOpMode {
         } else if(gamepad1.a){
             stopperPos = 0.275;
             intakePower = -0.25;
-        }
-    }
-
-    public void angleFix(){
-        // lock angle
-        if(gamepad1.left_bumper) {
-            angleFixed = true;
-        }else if(Math.abs(gamepad1.right_stick_x) > 0.1){
-            angleFixed = false;
         }
     }
 
