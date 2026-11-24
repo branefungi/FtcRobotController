@@ -80,7 +80,7 @@ public class ApriltagPos {
             c = c * (1 - alpha) + c2 * alpha;
         }
         if(found){
-            if(c > 40) {
+            if(c > 35) {
                 status = Status.ACTIVE;
             }else if(c < 30){
                 status = Status.INACTIVE;
