@@ -300,10 +300,10 @@ public class RedTeleop extends LinearOpMode {
 
     public void setIntakePower(){
         if (gamepad1.left_trigger > 0.1) {
-            stopperPos = 0.2;
+            stopperPos = 0.28;
             intakePower = 0.5;
         } else if(gamepad1.a){
-            stopperPos = 0.275;
+            stopperPos = 0.2;
             intakePower = -0.25;
         }
     }
