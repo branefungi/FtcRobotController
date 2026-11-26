@@ -19,7 +19,7 @@ public final class RobotConstants {
     public static final double FLYWHEEL_D = 0;
     public static final double FLYWHEEL_F = 13;
     public static final double TURRET_MIN_TICKS = 0.25;
-    public static final double TURRET_MAX_TICKS = 0.75;
+    public static final double TURRET_MAX_TICKS = 1;
     public static final double TURRET_TICKS_PER_DEGREE = 0.5/180.0;
     public static final double CAMERA_HEIGHT = 12; //camera inches above the ground
     public static final double CAMERA_FORWARD_OFFSET_IN = 0; //offset in direction camera is facing, in front of center is positive

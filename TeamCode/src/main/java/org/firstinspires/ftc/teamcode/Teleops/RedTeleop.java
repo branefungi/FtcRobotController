@@ -129,7 +129,7 @@ public class RedTeleop extends LinearOpMode {
 
 
         turret = hardwareMap.get(Servo.class, RobotConstants.TURRET_MOTOR);
-        turret.setDirection(Servo.Direction.FORWARD);
+        turret.setDirection(Servo.Direction.REVERSE);
         turret.setPosition(0.5);
 
         stopper = hardwareMap.get(Servo.class, RobotConstants.STOPPER_SERVO);
@@ -179,23 +179,23 @@ public class RedTeleop extends LinearOpMode {
             }
 
             //aiming
-//            if(visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING){
-//                List<AprilTagDetection> detectedTags = aprilTag.getDetections();
-//                aiming(detectedTags);
-//                if(!tagA.isFound() && !tagS.isFound()){
-//                    turretTarget = 0.5;
-//                }
-//                turret.setPosition(turretTarget);
-//            }
-            if(clickCD.seconds() > 0.2){
-                if(gamepad2.dpad_right){
-                    turretTarget += 0.01;
-                    clickCD.reset();
-                } else if (gamepad2.dpad_left) {
-                    turretTarget -= 0.01;
-                    clickCD.reset();
+            if(visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING){
+                List<AprilTagDetection> detectedTags = aprilTag.getDetections();
+                aiming(detectedTags);
+                if(!tagA.isFound() && !tagS.isFound()){
+                    turretTarget = 0.5;
                 }
+                turret.setPosition(turretTarget);
             }
+//            if(clickCD.seconds() > 0.2){
+//                if(gamepad2.dpad_right){
+//                    turretTarget += 0.01;
+//                    clickCD.reset();
+//                } else if (gamepad2.dpad_left) {
+//                    turretTarget -= 0.01;
+//                    clickCD.reset();
+//                }
+//            }
             turretTarget = Range.clip(turretTarget, 0, 1);
             turret.setPosition(turretTarget);
 
@@ -218,7 +218,7 @@ public class RedTeleop extends LinearOpMode {
 
 
             // apply final values
-            intake.setPower(0);
+            intake.setPower(intakePower);
             transfer.setPower(intakePower*1.4);
             flyWheel1.setVelocity(FWTarget1);
             flyWheel2.setVelocity(FWTarget2);
@@ -317,11 +317,10 @@ public class RedTeleop extends LinearOpMode {
                                 Math.pow(detection.ftcPose.y, 2) +
                                 Math.pow(detection.ftcPose.z, 2)
                 ) - RobotConstants.CAMERA_FORWARD_OFFSET_IN;
-                bearing = detection.ftcPose.elevation;
-                elevation = -(34.0/30.0) * detection.ftcPose.bearing + RobotConstants.CAMERA_ANGLE;
+                bearing = -(34.0/30.0) * detection.ftcPose.bearing; //temp change
+                elevation =  -detection.ftcPose.elevation + RobotConstants.CAMERA_ANGLE;
 
-
-                bearing += startingAngle + Math.toDegrees(heading) + turretPos * (1/RobotConstants.TURRET_TICKS_PER_DEGREE);   // in degrees
+                bearing += startingAngle + Math.toDegrees(heading) + (turretPos - 0.5) * (1/RobotConstants.TURRET_TICKS_PER_DEGREE);   // in degrees
                 bearing = Math.toRadians(bearing);
                 elevation = Math.toRadians(elevation);
 
@@ -339,6 +338,8 @@ public class RedTeleop extends LinearOpMode {
                         tagS.setZ(48);
                         tagS.setStatus(ApriltagPos.Status.ACTIVE);
                     }
+                    telemetry.addData("Bearing to goal", detection.ftcPose.bearing);
+
                     continue;
                 }
                 if(((AprilTagClusterDetection) detection).metadata.name.equals(targetTagId()[1])){
@@ -369,12 +370,14 @@ public class RedTeleop extends LinearOpMode {
         }
 
         turretTarget = turretTarget - startingAngle - Math.toDegrees(heading);
-        if (turretTarget > highLimit * (1/RobotConstants.TURRET_TICKS_PER_DEGREE) + 30.0) { //wrap angle
-            turretTarget -= 360;
-        } else if (turretTarget < lowLimit * (1/RobotConstants.TURRET_TICKS_PER_DEGREE) - 30.0) {
-            turretTarget += 360;
+
+        turretTarget = RobotConstants.TURRET_TICKS_PER_DEGREE * (turretTarget) + 0.5; // convert to encoder ticks + test
+        if (turretTarget > highLimit + (RobotConstants.TURRET_TICKS_PER_DEGREE) * 30.0) { //wrap angle
+            turretTarget -= 360 * RobotConstants.TURRET_TICKS_PER_DEGREE;
+        } else if (turretTarget < lowLimit - (RobotConstants.TURRET_TICKS_PER_DEGREE) * 30.0) {
+            turretTarget += 360 * RobotConstants.TURRET_TICKS_PER_DEGREE;
         }
-        turretTarget = RobotConstants.TURRET_TICKS_PER_DEGREE * (turretTarget); // convert to encoder ticks
+
         // hardware limit
         turretTarget = Range.clip(turretTarget, lowLimit, highLimit); //(Math.toDegrees(Math.atan(3.5 / range)));
 
@@ -409,13 +412,13 @@ public class RedTeleop extends LinearOpMode {
                     turretTimer.reset();
                     timerReset = true;
                 }
-                stopperPos = 0.275;  // open
+                stopperPos = 0.2;  // open
                 intakePower = Math.min(feedPower + 2 * turretTimer.milliseconds(), feedPower+500);
             }else{
                 timerReset = false;
             }
         } else {
-            stopperPos = 0.2; // closed
+            stopperPos = 0.28; // closed
             if(idle) {
                 FWTarget1 *= 0.75;
                 FWTarget2 *= 0.75;
@@ -447,6 +450,7 @@ public class RedTeleop extends LinearOpMode {
         telemetry.addData("intake power", intakePower);
         telemetry.addData("turret target", turretTarget);
         telemetry.addData("Turret Ticks", turret.getPosition());
+
         telemetry.update();
 
 
