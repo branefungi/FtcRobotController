@@ -53,7 +53,7 @@ public class RedTeleop extends LinearOpMode {
     double intakePower = 0;
     double FWTarget1 = 0;
     double FWTarget2 = 0;
-    double FWVal1 = 1000;
+    double FWVal1 = 700;
     double FWVal2 = 1000;
     boolean FWPressed = false;
     double turretTarget = 0.5;
@@ -65,7 +65,7 @@ public class RedTeleop extends LinearOpMode {
 
     //forward = 0, 2
     //backwards = 1, 3
-    double stopperPos = 0.2;
+    double stopperPos = 0.15;
     double turretPos;
     double FWV1;
     double FWV2;
@@ -241,7 +241,7 @@ public class RedTeleop extends LinearOpMode {
 
         // Create AprilTag processor
         aprilTag = new AprilTagProcessor.Builder()
-                .setLensIntrinsics(560.8, 732.2, 400.0, 326.0)
+                .setLensIntrinsics(448.64, 539.04, 320.0, 240.0)
                 .build();
 
         aprilTag.setDecimation(2);
@@ -300,10 +300,10 @@ public class RedTeleop extends LinearOpMode {
 
     public void setIntakePower(){
         if (gamepad1.left_trigger > 0.1) {
-            stopperPos = 0.28;
+            stopperPos = 0.4;
             intakePower = 0.5;
         } else if(gamepad1.a){
-            stopperPos = 0.2;
+            stopperPos = 0.15;
             intakePower = -0.25;
         }
     }
@@ -362,8 +362,8 @@ public class RedTeleop extends LinearOpMode {
         }
 
         if(tagS.status() == ApriltagPos.Status.ACTIVE){
-            turretTarget = tagA.findAngle(xPos, yPos);
-            range = tagA.findRange(xPos, yPos);
+            turretTarget = tagS.findAngle(xPos, yPos);
+            range = tagS.findRange(xPos, yPos);
         }else {
             turretTarget = tagA.findAngle(xPos, yPos);
             range = tagA.findRange(xPos, yPos);
@@ -403,22 +403,21 @@ public class RedTeleop extends LinearOpMode {
         }
         FWTarget1 = FWVal1;
         FWTarget2 = FWVal2;
-        feedPower = 0.9;
+        feedPower = 0.75;
         if (gamepad1.x) {
 
             //setting target velocity
             if(Math.abs(FWV1) >= Math.abs(FWTarget1) && Math.abs(FWV2) >= Math.abs(FWTarget2)){
-                if(timerReset){
-                    turretTimer.reset();
-                    timerReset = true;
+
+                stopperPos = 0.15;  // open
+                if(stopper.getPosition() <= stopperPos) {
+                    intakePower = Math.min(feedPower + 2 * turretTimer.milliseconds(), feedPower + 500);
                 }
-                stopperPos = 0.2;  // open
-                intakePower = Math.min(feedPower + 2 * turretTimer.milliseconds(), feedPower+500);
             }else{
                 timerReset = false;
             }
         } else {
-            stopperPos = 0.28; // closed
+            stopperPos = 0.4; // closed
             if(idle) {
                 FWTarget1 *= 0.75;
                 FWTarget2 *= 0.75;
